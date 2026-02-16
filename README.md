@@ -72,25 +72,6 @@ curl -X GET http://localhost:8000/api/v1/depth \
   -d '{"trading_pair": {"base": "BTC", "quote": "USD"}}'
 ```
 
-## 📊 Architecture
-
-```mermaid
-graph TD
-    Client[Client Application] --> Server[HTTP Server]
-    Server --> TradingEngine[Trading Engine]
-    TradingEngine --> |BTC/USD| OB1[Orderbook 1]
-    TradingEngine --> |ETH/USD| OB2[Orderbook 2]
-    TradingEngine --> |...| OBN[Orderbook N]
-    
-    Server -.-> |JSON| Client
-    
-    style Server fill:#f9f,stroke:#333,stroke-width:2px
-    style TradingEngine fill:#bbf,stroke:#333,stroke-width:2px
-    style OB1 fill:#bfb,stroke:#333,stroke-width:2px
-    style OB2 fill:#bfb,stroke:#333,stroke-width:2px
-    style OBN fill:#bfb,stroke:#333,stroke-width:2px
-```
-
 ### Data Flow
 
 1. **Client Request** → HTTP Server receives and validates request
@@ -98,53 +79,6 @@ graph TD
 3. **Trading Engine** → Validates market exists and routes to correct orderbook
 4. **Orderbook** → Executes order matching/operations
 5. **Response** → Flows back through the layers to client
-
-## 📦 Components
-
-### [Orderbook](./orderbook/README.md)
-
-The core matching engine implementing price-time priority:
-
-- **Features**: Limit orders, market orders, partial fills, order modifications
-- **Performance**: O(log n) for price level operations
-- **Data Structures**: BTreeMap for sorted prices, VecDeque for time priority
-
-```rust
-use orderbook::{Orderbook, LimitOrder, Side};
-
-let mut ob = Orderbook::new();
-let order = LimitOrder { 
-    price: dec!(100.50), 
-    quantity: dec!(10), 
-    side: Side::Bids,
-    user_id: 1 
-};
-ob.add_limit_order(order);
-```
-
-### [Trading Engine](./trading_engine/README.md)
-
-Multi-market management layer:
-
-- **Features**: Market creation, order routing, market validation
-- **Design**: HashMap of orderbooks indexed by trading pair
-- **Safety**: All operations validate market existence
-
-```rust
-use trading_engine::{TradingEngine, TradingPair};
-
-let mut engine = TradingEngine::new();
-let pair = TradingPair::new("BTC".to_string(), "USD".to_string());
-engine.create_market(pair);
-```
-
-### [Server](./server/README.md)
-
-RESTful API server:
-
-- **Framework**: Axum with Tokio async runtime
-- **Endpoints**: 9 REST endpoints for complete trading operations
-- **Concurrency**: Arc<Mutex> for thread-safe state management
 
 ## 📡 API Endpoints
 
@@ -186,9 +120,6 @@ Edit `server/src/main.rs`:
 ```rust
 let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
 ```
-
-### Decimal Precision
-The system uses `rust_decimal` for all price and quantity calculations to ensure financial precision.
 
 ## 📝 Example: Complete Trading Flow
 
@@ -247,11 +178,3 @@ GET /api/v1/depth
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-## 📧 Contact
-
-- GitHub Issues: [Report bugs or request features](https://github.com/yourusername/rust-trading-system/issues)
-- Email: pranavvkumar03@gmail.com
-
----
-
-Built with ❤️ and ⚡ in Rust
